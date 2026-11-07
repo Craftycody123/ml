@@ -1,29 +1,34 @@
-from tensorflow.keras.datasets import fashion_mnist
+import pandas as pd
 from sklearn import svm
 from sklearn.metrics import accuracy_score
 
-(X_train, y_train), (X_test, y_test) = fashion_mnist.load_data()
+# Load dataset
+train = pd.read_csv("fashion-mnist_train.csv")
+test = pd.read_csv("fashion-mnist_test.csv")
 
-X_train = X_train[:5000] / 255.0
-y_train = y_train[:5000]
-X_test = X_test[:1000] / 255.0
-y_test = y_test[:1000]
+# Separate features and labels
+X_train = train.iloc[:5000, 1:].values / 255.0
+y_train = train.iloc[:5000, 0].values
 
-X_train = X_train.reshape(len(X_train), -1)
-X_test = X_test.reshape(len(X_test), -1)
+X_test = test.iloc[:1000, 1:].values / 255.0
+y_test = test.iloc[:1000, 0].values
 
+# Linear SVM
 linear_model = svm.SVC(kernel="linear")
 linear_model.fit(X_train, y_train)
 y_pred_linear = linear_model.predict(X_test)
 
+# Polynomial SVM
 poly_model = svm.SVC(kernel="poly", degree=3)
 poly_model.fit(X_train, y_train)
 y_pred_poly = poly_model.predict(X_test)
 
+# RBF SVM
 rbf_model = svm.SVC(kernel="rbf")
 rbf_model.fit(X_train, y_train)
 y_pred_rbf = rbf_model.predict(X_test)
 
-print("Linear SVM Accuracy:", accuracy_score(y_test, y_pred_linear))
-print("Polynomial SVM Accuracy:", accuracy_score(y_test, y_pred_poly))
-print("RBF SVM Accuracy:", accuracy_score(y_test, y_pred_rbf))
+# Compare accuracies
+print("Linear SVM:", accuracy_score(y_test, y_pred_linear))
+print("Polynomial SVM:", accuracy_score(y_test, y_pred_poly))
+print("RBF SVM:", accuracy_score(y_test, y_pred_rbf))

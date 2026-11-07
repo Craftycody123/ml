@@ -1,11 +1,21 @@
+
 import matplotlib.pyplot as plt
 import time
-from tensorflow.keras.datasets import mnist
+import pandas as pd
+
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Input, Flatten
 from tensorflow.keras.utils import to_categorical
 
-(X_train, y_train), (X_test, y_test) = mnist.load_data()
+# Load downloaded dataset
+train = pd.read_csv("mnist_train.csv")
+test = pd.read_csv("mnist_test.csv")
+
+X_train = train.iloc[:, 1:].values.reshape(-1, 28, 28)
+y_train = train.iloc[:, 0].values
+
+X_test = test.iloc[:, 1:].values.reshape(-1, 28, 28)
+y_test = test.iloc[:, 0].values
 
 X_train = X_train / 255.0
 X_test = X_test / 255.0

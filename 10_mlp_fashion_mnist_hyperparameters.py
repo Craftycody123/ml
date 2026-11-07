@@ -1,11 +1,21 @@
+
 import time
-from tensorflow.keras.datasets import fashion_mnist
+import pandas as pd
+
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Flatten, Input
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.optimizers import Adam
 
-(X_train, y_train), (X_test, y_test) = fashion_mnist.load_data()
+# Load downloaded dataset
+train = pd.read_csv("fashion-mnist_train.csv")
+test = pd.read_csv("fashion-mnist_test.csv")
+
+X_train = train.iloc[:, 1:].values.reshape(-1, 28, 28)
+y_train = train.iloc[:, 0].values
+
+X_test = test.iloc[:, 1:].values.reshape(-1, 28, 28)
+y_test = test.iloc[:, 0].values
 
 X_train = X_train / 255.0
 X_test = X_test / 255.0
@@ -52,13 +62,15 @@ for lr in learning_rates:
             end = time.time()
 
             loss, acc = model.evaluate(X_test, y_test, verbose=0)
+
             results.append({
                 "lr": lr,
                 "batch": batch,
                 "epochs": epochs,
                 "accuracy": acc,
-                "time": end - start
+                "time": end-start
             })
+
             print(f"Accuracy: {acc:.4f}, Time: {end-start:.2f}s")
 
 for result in results:
