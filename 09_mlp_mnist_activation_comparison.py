@@ -1,85 +1,44 @@
-
-import matplotlib.pyplot as plt
 import time
-import pandas as pd
+from sklearn.datasets import fetch_openml
+from sklearn.model_selection import train_test_split
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Input, Flatten
-from tensorflow.keras.utils import to_categorical
+# Load MNIST dataset
+mnist = fetch_openml("mnist_784", version=1, as_frame=False)
 
-# Load downloaded dataset
-train = pd.read_csv("mnist_train.csv")
-test = pd.read_csv("mnist_test.csv")
+X = mnist.data / 255.0
+y = mnist.target.astype(int)
 
-X_train = train.iloc[:, 1:].values.reshape(-1, 28, 28)
-y_train = train.iloc[:, 0].values
+# Split dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
-X_test = test.iloc[:, 1:].values.reshape(-1, 28, 28)
-y_test = test.iloc[:, 0].values
-
-X_train = X_train / 255.0
-X_test = X_test / 255.0
-
-y_train = to_categorical(y_train, 10)
-y_test = to_categorical(y_test, 10)
-
-def create_model(activation):
-    model = Sequential([
-        Input(shape=(28, 28)),
-        Flatten(),
-        Dense(128, activation=activation),
-        Dense(64, activation=activation),
-        Dense(10, activation="softmax")
-    ])
-    model.compile(
-        optimizer="adam",
-        loss="categorical_crossentropy",
-        metrics=["accuracy"]
-    )
-    return model
-
-activations = ["sigmoid", "tanh", "relu"]
-results = {}
-histories = {}
+# Activation functions
+activations = ["logistic", "relu", "tanh"]
 
 for act in activations:
-    print(f"\nTraining with {act} activation")
-    model = create_model(act)
 
-    start = time.time()
-    history = model.fit(
-        X_train, y_train,
-        epochs=5,
-        batch_size=128,
-        validation_split=0.2,
-        verbose=1
+    # Create model
+    model = MLPClassifier(
+        hidden_layer_sizes=(128,),
+        activation=act,
+        solver="adam",
+        max_iter=5,
+        random_state=42
     )
+
+    # Train model and calculate time
+    start = time.time()
+    model.fit(X_train, y_train)
     end = time.time()
 
-    loss, acc = model.evaluate(X_test, y_test, verbose=0)
-    results[act] = {"accuracy": acc, "time": end - start}
-    histories[act] = history
+    # Test model
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
 
-for act in results:
-    print(
-        f"{act} -> Accuracy: {results[act]['accuracy']:.4f}, "
-        f"Time: {results[act]['time']:.2f}s"
-    )
-
-for act in activations:
-    plt.plot(histories[act].history["val_accuracy"], label=act)
-
-plt.title("Validation Accuracy Comparison")
-plt.xlabel("Epochs")
-plt.ylabel("Accuracy")
-plt.legend()
-plt.show()
-
-for act in activations:
-    plt.plot(histories[act].history["val_loss"], label=act)
-
-plt.title("Validation Loss Comparison")
-plt.xlabel("Epochs")
-plt.ylabel("Loss")
-plt.legend()
-plt.show()
+    print(act.upper())
+    print("Accuracy:", round(accuracy * 100, 2), "%")
+    print("Training Time:", round(end - start, 2), "seconds")
+    print("-------------------------")
